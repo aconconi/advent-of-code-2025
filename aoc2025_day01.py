@@ -6,7 +6,7 @@ Day 01: Secret Entrance
 import pytest
 
 
-def parse_input(file_name: str) -> list[int]:
+def parse_input(file_name: str) -> list[tuple[int, int]]:
     def convert_rotation(line: str) -> int:
         direction = -1 if line[0] == "L" else 1
         distance = int(line[1:])
@@ -16,24 +16,28 @@ def parse_input(file_name: str) -> list[int]:
         return [convert_rotation(line) for line in data_file.read().splitlines()]
 
 
-def day01_part1(data: list[int]) -> int:
+def day01_part1(data: list[tuple[int, int]]) -> int:
     dial = 50
     pointed_zero = 0
     for direction, distance in data:
         dial = (dial + direction * distance) % 100
         if dial == 0:
-            pointed_zero + 1
+            pointed_zero += 1
     return pointed_zero
 
 
-def day01_part2(data: list[int]) -> int:
+def day01_part2(data: list[tuple[int, int]]) -> int:
     dial = 50
     pointed_zero = 0
     for direction, distance in data:
-        for _ in range(distance):
-            dial = (dial + direction) % 100
-            if dial == 0:
-                pointed_zero += 1
+        delta = direction * distance
+        if delta > 0:
+            pointed_zero += (dial + delta) // 100
+        elif delta == 0:
+            pointed_zero += 1
+        else:
+            pointed_zero += ((100 - dial) % 100 + abs(delta)) // 100
+        dial = (dial + delta) % 100
     return pointed_zero
 
 
