@@ -3,6 +3,8 @@ Advent of Code 2025
 Day 01: Secret Entrance
 """
 
+from functools import reduce
+
 import pytest
 
 
@@ -17,26 +19,30 @@ def parse_input(file_name: str) -> list[int]:
 
 
 def day01_part1(data: list[int]) -> int:
-    dial = 50
-    pointed_zero = 0
-    for delta in data:
-        dial = (dial + delta) % 100
-        if dial == 0:
-            pointed_zero += 1
+    def step(state, delta):
+        dial, count = state
+        new_dial = (dial + delta) % 100
+        return (new_dial, count + 1 if new_dial == 0 else count)
+
+    _, pointed_zero = reduce(step, data, (50, 0))
     return pointed_zero
 
 
 def day01_part2(data: list[int]) -> int:
-    dial = 50
-    pointed_zero = 0
-    for delta in data:
+    def step(state, delta):
+        dial, count = state
+        new_dial = (dial + delta) % 100
+
         if delta > 0:
-            pointed_zero += (dial + delta) // 100
+            count += (dial + delta) // 100
         elif delta == 0:
-            pointed_zero += 1
+            count += 1
         else:
-            pointed_zero += ((100 - dial) % 100 + abs(delta)) // 100
-        dial = (dial + delta) % 100
+            count += ((100 - dial) % 100 + abs(delta)) // 100
+
+        return (new_dial, count)
+
+    _, pointed_zero = reduce(step, data, (50, 0))
     return pointed_zero
 
 
