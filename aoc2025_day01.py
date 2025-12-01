@@ -30,7 +30,7 @@ def day01_part2(data: list[int]) -> int:
     dial = 50
     pointed_zero = 0
     for direction, distance in data:
-        for step in range(distance):
+        for _ in range(distance):
             dial = (dial + direction) % 100
             if dial == 0:
                 pointed_zero += 1
