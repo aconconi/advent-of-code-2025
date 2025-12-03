@@ -3,51 +3,40 @@ Advent of Code 2025
 Day 03: Lobby
 """
 
-# pylint: skip-file
 import pytest
 
 
 def parse_input(file_name):
     with open(file_name, "r", encoding="ascii") as data_file:
-        return [
-            list(map(int, line))
-            for line in data_file.read().splitlines()
-        ]
+        return [list(map(int, line)) for line in data_file.read().splitlines()]
 
 
-def largest_joltage(bank, n=2):
-    print(f"\n{bank=}")
-    digits = [0] * n
+def largest_joltage(bank, turn_on):
+    digits = [0] * turn_on
     for i, battery in enumerate(bank):
-        print(f"\n{i=} {battery=} {digits=}")
-        for j in range(n):
-            print(f"{j=} {digits[j]=} {len(bank) - n + j}")
-            if battery > digits[j] and i <= len(bank) - n + j :
-                digits[j] = battery
-                digits[j+1:] = [0] * (n - j - 1)
-                print(f"{digits=}")
-                break
+        update_idx = next(
+            (
+                idx
+                for idx in range(turn_on)
+                if battery > digits[idx] and i <= len(bank) - turn_on + idx
+            ),
+            None,
+        )
 
-    print(digits)
-    result = sum(
-        digit * 10 ** i
-        for i, digit in enumerate(reversed(digits))
-    )
+        if update_idx is not None:
+            digits[update_idx] = battery
+            digits[update_idx + 1 :] = [0] * (turn_on - update_idx - 1)
+
+    result = sum(digit * 10**i for i, digit in enumerate(reversed(digits)))
     return result
 
+
 def day03_part1(banks):
-    return sum(
-        largest_joltage(bank, 2)
-        for bank in banks
-    )
+    return sum(largest_joltage(bank, 2) for bank in banks)
 
 
 def day03_part2(banks):
-    return sum(
-        largest_joltage(bank, 12)
-        for bank in banks
-    )
-
+    return sum(largest_joltage(bank, 12) for bank in banks)
 
 
 @pytest.fixture(autouse=True, name="test_data")
@@ -57,6 +46,7 @@ def fixture_test_data():
 
 def test_day03_part1(test_data):
     assert day03_part1(test_data) == 357
+
 
 def test_day03_part2(test_data):
     assert day03_part2(test_data) == 3121910778619
