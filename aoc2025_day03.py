@@ -15,34 +15,41 @@ def parse_input(file_name):
         ]
 
 
-def largest_joltage(bank):
-    high_digit, low_digit = 0, 0
+def largest_joltage(bank, n=2):
+    print(f"\n{bank=}")
+    digits = [0] * n
     for i, battery in enumerate(bank):
-        if battery > high_digit and i < len(bank) - 1:
-            # new best high_digit found
-            high_digit = battery
-            # invalidate low_digit because high_digit has been updated
-            low_digit = 0
-        elif battery > low_digit:
-            low_digit = battery
-        if high_digit == low_digit == 9:
-            # maximum achieved, no need to continue
-            break
+        print(f"\n{i=} {battery=} {digits=}")
+        for j in range(n):
+            print(f"{j=} {digits[j]=} {len(bank) - n + j}")
+            if battery > digits[j] and i <= len(bank) - n + j :
+                digits[j] = battery
+                digits[j+1:] = [0] * (n - j - 1)
+                print(f"{digits=}")
+                break
 
-    return high_digit * 10 + low_digit
+    print(digits)
+    result = sum(
+        digit * 10 ** i
+        for i, digit in enumerate(reversed(digits))
+    )
+    return result
 
 def day03_part1(banks):
     return sum(
-        largest_joltage(bank)
+        largest_joltage(bank, 2)
         for bank in banks
     )
 
 
 def day03_part2(banks):
-    pass
+    return sum(
+        largest_joltage(bank, 12)
+        for bank in banks
+    )
 
 
-"""
+
 @pytest.fixture(autouse=True, name="test_data")
 def fixture_test_data():
     return parse_input("data/day03_test.txt")
@@ -52,8 +59,8 @@ def test_day03_part1(test_data):
     assert day03_part1(test_data) == 357
 
 def test_day03_part2(test_data):
-    assert day03_part2(test_data)
-"""
+    assert day03_part2(test_data) == 3121910778619
+
 
 if __name__ == "__main__":
     input_data = parse_input("data/day03.txt")
