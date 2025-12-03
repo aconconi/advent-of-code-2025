@@ -6,5 +6,8 @@ readme = "README.md"
 license = "UNLICENSE"
 dependencies = [
   "pytest",
-  "ruff"
+  "ruff>=0.14.7",
 ]
+
+[tool.ruff]
+lint.select = ["I"]
