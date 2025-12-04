@@ -13,11 +13,12 @@ def parse_input(file_name):
 
 def largest_joltage(bank, turn_on):
     digits = [0] * turn_on
+    first_idx = 0
     for i, battery in enumerate(bank):
         update_idx = next(
             (
                 idx
-                for idx in range(turn_on)
+                for idx in range(first_idx, turn_on)
                 if battery > digits[idx] and i <= len(bank) - turn_on + idx
             ),
             None,
@@ -26,8 +27,10 @@ def largest_joltage(bank, turn_on):
         if update_idx is not None:
             digits[update_idx] = battery
             digits[update_idx + 1 :] = [0] * (turn_on - update_idx - 1)
+            if battery == 9:
+                first_idx = update_idx + 1
 
-    result = sum(digit * 10**i for i, digit in enumerate(reversed(digits)))
+    result = int("".join(map(str, digits)))
     return result
 
 
