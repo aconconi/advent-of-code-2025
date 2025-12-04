@@ -7,17 +7,17 @@ Day 00:
 import pytest
 
 
-def parse_input(file_name):
-    with open(file_name, "r", encoding="ascii") as data_file:
-        return data_file.read().splitlines()
+def parse_input(file_name: str) -> list[str]:
+     with open(file_name, "r", encoding="ascii") as data_file:
+         return data_file.read().splitlines()
 
 
-def day00_part1(data):
-    pass
+def day00_part1(data: list[str]) -> None:
+     pass
 
 
-def day00_part2(data):
-    pass
+def day00_part2(data: list[str]) -> None:
+     pass
 
 
 """
