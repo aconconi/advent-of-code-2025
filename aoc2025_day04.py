@@ -3,9 +3,9 @@ Advent of Code 2025
 Day 04:
 """
 
-# pylint: skip-file
-import pytest
 from itertools import product
+
+import pytest
 
 
 def parse_input(file_name):
@@ -18,27 +18,42 @@ def parse_input(file_name):
         )
         return rolls
 
-def adjacent_positions(pos):
+
+def neighbors(rolls, pos):
     for dx, dy in product([-1, 0, 1], repeat=2):
         if (dx, dy) != (0, 0):
-            yield pos[0] + dx, pos[1] + dy
+            other_pos = (pos[0] + dx, pos[1] + dy)
+            if other_pos in rolls:
+                yield other_pos
+
 
 def count_neighbors(rolls, pos):
-    return sum(
-        other_pos in rolls
-        for other_pos in adjacent_positions(pos)
-    )
+    return sum(1 for _ in neighbors(rolls, pos))
 
 
 def day04_part1(rolls):
-    return sum(count_neighbors(rolls, pos) < 4 for pos in rolls)
+    return sum(count_neighbors(rolls, roll) < 4 for roll in rolls)
 
 
-def day04_part2(data):
-    pass
+def day04_part2(rolls):
+    rolls_neigh_count = {pos: count_neighbors(rolls, pos) for pos in rolls}
+    count_removed = 0
+    while True:
+        to_be_removed = []
+        for roll, num_neighbors in rolls_neigh_count.items():
+            if num_neighbors < 4:
+                to_be_removed.append(roll)
+                for neighbor in neighbors(rolls, roll):
+                    rolls_neigh_count[neighbor] -= 1
+        if not to_be_removed:
+            break
+        for roll in to_be_removed:
+            count_removed += 1
+            rolls.remove(roll)
+            rolls_neigh_count.pop(roll)
+    return count_removed
 
 
-"""
 @pytest.fixture(autouse=True, name="test_data")
 def fixture_test_data():
     return parse_input("data/day04_test.txt")
@@ -47,9 +62,10 @@ def fixture_test_data():
 def test_day04_part1(test_data):
     assert day04_part1(test_data) == 13
 
+
 def test_day04_part2(test_data):
-    assert day04_part2(test_data)
-"""
+    assert day04_part2(test_data) == 43
+
 
 if __name__ == "__main__":
     input_data = parse_input("data/day04.txt")
