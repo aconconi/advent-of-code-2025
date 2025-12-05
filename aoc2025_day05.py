@@ -13,12 +13,12 @@ class IdRange:
         self.start = start
         self.end = end
 
+    def contains_id(self, id: int) -> bool:
+        return self.start <= id <= self.end
+
     def overlaps_with(self, other: "IdRange") -> bool:
         """Check if this range overlaps with another range."""
-        return (
-            self.start <= other.start <= self.end
-            or other.start <= self.start <= other.end
-        )
+        return self.contains_id(other.start) or other.contains_id(self.start)
 
     def merge_with(self, other: "IdRange") -> "IdRange":
         """Merge this range with another range."""
@@ -26,9 +26,6 @@ class IdRange:
             raise ValueError("Ranges do not overlap and cannot be merged.")
         self.start = min(self.start, other.start)
         self.end = max(self.end, other.end)
-
-    def contains_id(self, id: int) -> bool:
-        return self.start <= id <= self.end
 
     def __len__(self) -> int:
         return self.end - self.start + 1
