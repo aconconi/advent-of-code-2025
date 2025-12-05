@@ -26,6 +26,7 @@ class IdRange:
             raise ValueError("Ranges do not overlap and cannot be merged.")
         self.start = min(self.start, other.start)
         self.end = max(self.end, other.end)
+        return self
 
     def __len__(self) -> int:
         return self.end - self.start + 1
