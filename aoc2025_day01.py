@@ -19,43 +19,44 @@ def parse_input(file_name: str) -> list[int]:
 
 
 def day01_part1(data: list[int]) -> int:
-     def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
-         dial, count = state
-         new_dial = (dial + delta) % 100
-         return (new_dial, count + 1 if new_dial == 0 else count)
-     _, pointed_zero = reduce(step, data, (50, 0))
-     return pointed_zero
+    def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
+        dial, count = state
+        new_dial = (dial + delta) % 100
+        return (new_dial, count + 1 if new_dial == 0 else count)
+
+    _, pointed_zero = reduce(step, data, (50, 0))
+    return pointed_zero
 
 
 def day01_part2(data: list[int]) -> int:
-     def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
-         dial, count = state
-         new_dial = (dial + delta) % 100
+    def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
+        dial, count = state
+        new_dial = (dial + delta) % 100
 
-         if delta > 0:
-             count += (dial + delta) // 100
-         elif delta == 0:
-             count += 1
-         else:
-             count += ((100 - dial) % 100 + abs(delta)) // 100
+        if delta > 0:
+            count += (dial + delta) // 100
+        elif delta == 0:
+            count += 1
+        else:
+            count += ((100 - dial) % 100 + abs(delta)) // 100
 
-         return (new_dial, count)
+        return (new_dial, count)
 
-     _, pointed_zero = reduce(step, data, (50, 0))
-     return pointed_zero
+    _, pointed_zero = reduce(step, data, (50, 0))
+    return pointed_zero
 
 
 @pytest.fixture(autouse=True, name="test_data")
 def fixture_test_data() -> list[int]:
-     return parse_input("data/day01_test.txt")
+    return parse_input("data/day01_test.txt")
 
 
 def test_day01_part1(test_data: list[int]) -> None:
-     assert day01_part1(test_data) == 3
+    assert day01_part1(test_data) == 3
 
 
 def test_day01_part2(test_data: list[int]) -> None:
-     assert day01_part2(test_data) == 6
+    assert day01_part2(test_data) == 6
 
 
 if __name__ == "__main__":
