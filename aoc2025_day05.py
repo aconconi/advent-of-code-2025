@@ -38,7 +38,9 @@ class IdRange:
 def parse_input(file_name: str) -> tuple[list[IdRange], list[int]]:
     with open(file_name, "r", encoding="ascii") as data_file:
         sections = data_file.read().strip().split("\n\n", 1)
-        fresh_ranges = [IdRange(*map(int, line.split("-"))) for line in sections[0].splitlines()]
+        fresh_ranges = [
+            IdRange(*map(int, line.split("-"))) for line in sections[0].splitlines()
+        ]
         available_ingredients = [int(line) for line in sections[1].splitlines()]
         return fresh_ranges, available_ingredients
 
