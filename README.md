@@ -8,9 +8,9 @@
 |   1 | Secret Entrance                         | [aoc2025_day01.py](aoc2025_day01.py) |
 |   2 | Gift Shop                               | [aoc2025_day02.py](aoc2025_day02.py) |
 |   3 | Lobby                                   | [aoc2025_day03.py](aoc2025_day03.py) |
-|   4 | Cafeteria                               | [aoc2025_day04.py](aoc2025_day04.py) |
-|   5 |                | [aoc2025_day05.py](aoc2025_day05.py) |
-|   6 |                | [aoc2025_day06.py](aoc2025_day06.py) |
+|   4 | Printing Department                     | [aoc2025_day04.py](aoc2025_day04.py) |
+|   5 | Cafeteria                               | [aoc2025_day05.py](aoc2025_day05.py) |
+|   6 | Trash Compactor                         | [aoc2025_day06.py](aoc2025_day06.py) |
 |   7 |                | [aoc2025_day07.py](aoc2025_day07.py) |
 |   8 |                | [aoc2025_day08.py](aoc2025_day08.py) |
 |   9 |                | [aoc2025_day09.py](aoc2025_day09.py) |
