@@ -11,7 +11,7 @@
 |   4 | Printing Department                     | [aoc2025_day04.py](aoc2025_day04.py) |
 |   5 | Cafeteria                               | [aoc2025_day05.py](aoc2025_day05.py) |
 |   6 | Trash Compactor                         | [aoc2025_day06.py](aoc2025_day06.py) |
-|   7 |                | [aoc2025_day07.py](aoc2025_day07.py) |
+|   7 | Laboratories                            | [aoc2025_day07.py](aoc2025_day07.py) |
 |   8 |                | [aoc2025_day08.py](aoc2025_day08.py) |
 |   9 |                | [aoc2025_day09.py](aoc2025_day09.py) |
 |  10 |                | [aoc2025_day10.py](aoc2025_day10.py) |
