@@ -12,6 +12,7 @@ def parse_input(file_name: str) -> list[str]:
 
 
 def day07_part1(grid: list[str]) -> int:
+    # Beams at time i are represented by their column position j
     beams = {grid[0].find("S")}
     splits = 0
     for i in range(len(grid) - 1):
@@ -27,17 +28,20 @@ def day07_part1(grid: list[str]) -> int:
 
 
 def day07_part2(grid: list[str]) -> int:
-    beams = [0] * len(grid[0])
-    beams[grid[0].find("S")] = 1
+    # beam_counts[j] is the number of timelines for a beam
+    # in column j at time i
+    beam_counts = {grid[0].find("S"): 1}
     for i in range(len(grid) - 1):
-        for j, timelines in enumerate(beams):
-            if timelines == 0:
-                continue
-            if grid[i + 1][j] == "^":
-                beams[j - 1] += beams[j]
-                beams[j + 1] += beams[j]
-                beams[j] = 0
-    return sum(beams)
+        new_counts = {}
+        for col, count in beam_counts.items():
+            if grid[i + 1][col] == "^":
+                new_counts[col - 1] = new_counts.get(col - 1, 0) + count
+                new_counts[col + 1] = new_counts.get(col + 1, 0) + count
+            else:
+                new_counts[col] = new_counts.get(col, 0) + count
+        beam_counts = new_counts
+
+    return sum(beam_counts.values())
 
 
 @pytest.fixture(autouse=True, name="test_data")
