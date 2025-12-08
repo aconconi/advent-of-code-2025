@@ -4,27 +4,33 @@ Day 08:
 """
 
 # pylint: skip-file
-from math import sqrt
+from dataclasses import dataclass
+from itertools import combinations
+from math import prod, sqrt
 
 import pytest
 
-Point = tuple[int, ...]
+
+@dataclass(frozen=True)
+class Point:
+    x: int
+    y: int
+    z: int
+
+    def distance(self, other: "Point") -> float:
+        """Calculate Euclidean distance to another point."""
+        return sqrt(
+            (self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2
+        )
 
 
-def distance(p1: Point, p2: Point) -> float:
-    """Calculate Euclidean distance between two 3D points (tuples)."""
-    return sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
-
-
-def parse_input(file_name: str) -> list[Point]:
+def parse_input(file_name: str) -> list[tuple[Point, Point]]:
+    """Parse input file and return sorted pairs."""
     with open(file_name, "r", encoding="ascii") as data_file:
-        return [
-            tuple(map(int, line.split(","))) for line in data_file.read().splitlines()
+        points = [
+            Point(*map(int, line.split(","))) for line in data_file.read().splitlines()
         ]
-
-
-from itertools import combinations
-from math import prod
+    return sorted(combinations(points, 2), key=lambda pair: pair[0].distance(pair[1]))
 
 
 class UnionFind:
@@ -34,33 +40,33 @@ class UnionFind:
         self.parent = {}
         self.rank = {}
 
-    def find(self, x):
+    def find(self, point):
         """Find the root representative of the set containing x."""
-        if x not in self.parent:
-            self.parent[x] = x
-            self.rank[x] = 0
+        if point not in self.parent:
+            self.parent[point] = point
+            self.rank[point] = 0
 
-        if self.parent[x] != x:
-            self.parent[x] = self.find(self.parent[x])  # Path compression
+        if self.parent[point] != point:
+            self.parent[point] = self.find(self.parent[point])  # Path compression
 
-        return self.parent[x]
+        return self.parent[point]
 
-    def union(self, x, y):
-        """Merge the sets containing x and y."""
-        root_x = self.find(x)
-        root_y = self.find(y)
+    def union(self, a, b):
+        """Merge the sets containing points a and b."""
+        root_a = self.find(a)
+        root_b = self.find(b)
 
-        if root_x == root_y:
+        if root_a == root_b:
             return False  # Already in same set
 
         # Union by rank
-        if self.rank[root_x] < self.rank[root_y]:
-            self.parent[root_x] = root_y
-        elif self.rank[root_x] > self.rank[root_y]:
-            self.parent[root_y] = root_x
+        if self.rank[root_a] < self.rank[root_b]:
+            self.parent[root_a] = root_b
+        elif self.rank[root_a] > self.rank[root_b]:
+            self.parent[root_b] = root_a
         else:
-            self.parent[root_y] = root_x
-            self.rank[root_x] += 1
+            self.parent[root_b] = root_a
+            self.rank[root_a] += 1
 
         return True  # Sets were merged
 
@@ -75,46 +81,46 @@ class UnionFind:
         return list(connected_sets.values())
 
 
-def union_find_connected_sets(pairs):
-    """Build connected components using Union-Find algorithm on all pairs."""
+def union_find_sets(pairs):
+    """Union-Find to build connected components.
+    Args: pairs: List of (element1, element2) tuples.
+    Returns: List of connected component sets.
+    """
     uf = UnionFind()
-    for p1, p2 in pairs:
-        uf.union(p1, p2)
+    for pair in pairs:
+        uf.union(*pair)
     return uf.get_connected_sets()
 
 
 def kruskal_mst_edges(pairs):
     """Kruskal's algorithm: find Minimum Spanning Tree (MST).
     Assumes pairs are sorted by weight (distance).
-    Returns list of edges in the MST.
+    Args: pairs: List of (element1, element2) tuples.
+    Returns: List of edges in the MST.
     """
     uf = UnionFind()
     mst_edges = []
-    num_elements = len(set(p for pair in pairs for p in pair))
+    max_edges = len(set(p for pair in pairs for p in pair)) - 1
 
     for pair in pairs:
-        if len(mst_edges) == num_elements - 1:
-            break
-        p1, p2 = pair
-        if uf.union(p1, p2):
+        if uf.union(*pair):
             mst_edges.append(pair)
+            if len(mst_edges) == max_edges:
+                break
 
     return mst_edges
 
 
-def day08_part1(points: list[tuple], max_connections) -> int:
-    pairs = sorted(combinations(points, 2), key=lambda pair: distance(pair[0], pair[1]))
-    sorted_circuits = sorted(
-        union_find_connected_sets(pairs[:max_connections]), key=len, reverse=True
-    )
-    return prod(len(component) for component in sorted_circuits[:3])
+def day08_part1(sorted_pairs: list[tuple[Point, Point]], max_connections) -> int:
+    disjoint_sets = union_find_sets(sorted_pairs[:max_connections])
+    three_largest = sorted(disjoint_sets, key=len, reverse=True)[:3]
+    return prod(len(component) for component in three_largest)
 
 
-def day08_part2(points: list[tuple]) -> int:
-    pairs = sorted(combinations(points, 2), key=lambda pair: distance(pair[0], pair[1]))
-    mst_edges = kruskal_mst_edges(pairs)
+def day08_part2(sorted_pairs: list[tuple[Point, Point]]) -> int:
+    mst_edges = kruskal_mst_edges(sorted_pairs)
     last_a, last_b = mst_edges[-1]
-    return last_a[0] * last_b[0]
+    return last_a.x * last_b.x
 
 
 @pytest.fixture(autouse=True, name="test_data")
@@ -131,10 +137,10 @@ def test_day08_part2(test_data):
 
 
 if __name__ == "__main__":
-    input_data = parse_input("data/day08.txt")
+    pairs = parse_input("data/day08.txt")
 
     print("Day 08 Part 1:")
-    print(day08_part1(input_data, 1000))
+    print(day08_part1(pairs, 1000))
 
     print("Day 08 Part 2:")
-    print(day08_part2(input_data))
+    print(day08_part2(pairs))
