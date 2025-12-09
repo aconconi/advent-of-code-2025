@@ -1,6 +1,6 @@
 """
 Advent of Code 2025
-Day 08:
+Day 08: Playground
 """
 
 # pylint: skip-file

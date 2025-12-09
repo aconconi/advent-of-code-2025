@@ -12,8 +12,8 @@
 |   5 | Cafeteria                               | [aoc2025_day05.py](aoc2025_day05.py) |
 |   6 | Trash Compactor                         | [aoc2025_day06.py](aoc2025_day06.py) |
 |   7 | Laboratories                            | [aoc2025_day07.py](aoc2025_day07.py) |
-|   8 |                | [aoc2025_day08.py](aoc2025_day08.py) |
-|   9 |                | [aoc2025_day09.py](aoc2025_day09.py) |
+|   8 | Playground                              | [aoc2025_day08.py](aoc2025_day08.py) |
+|   9 | Movie Theater                           | [aoc2025_day09.py](aoc2025_day09.py) |
 |  10 |                | [aoc2025_day10.py](aoc2025_day10.py) |
 |  11 |                | [aoc2025_day11.py](aoc2025_day11.py) |
 |  12 |                | [aoc2025_day12.py](aoc2025_day12.py) |
