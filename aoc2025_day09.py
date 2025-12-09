@@ -3,8 +3,8 @@ Advent of Code 2025
 Day 09: Movie Theater
 """
 
-from dataclasses import dataclass
-from itertools import combinations, pairwise
+from dataclasses import dataclass, field
+from itertools import chain, combinations, pairwise
 
 import pytest
 
@@ -14,9 +14,31 @@ class Point:
     x: int
     y: int
 
-    def __iter__(self):
-        """Allow unpacking as (x, y) for compatibility."""
-        return iter((self.x, self.y))
+
+@dataclass(frozen=True)
+class Rectangle:
+    """Rectangle defined by its bounding box."""
+
+    min_corner: Point = field(init=False)
+    max_corner: Point = field(init=False)
+
+    def __init__(self, p1: Point, p2: Point):
+        object.__setattr__(self, "min_corner", Point(min(p1.x, p2.x), min(p1.y, p2.y)))
+        object.__setattr__(self, "max_corner", Point(max(p1.x, p2.x), max(p1.y, p2.y)))
+
+    @property
+    def area(self) -> int:
+        return (self.max_corner.x - self.min_corner.x + 1) * (
+            self.max_corner.y - self.min_corner.y + 1
+        )
+
+    def overlaps(self, other: "Rectangle") -> bool:
+        return (
+            other.min_corner.x < self.max_corner.x
+            and other.min_corner.y < self.max_corner.y
+            and other.max_corner.x > self.min_corner.x
+            and other.max_corner.y > self.min_corner.y
+        )
 
 
 def parse_input(file_name: str) -> list[Point]:
@@ -26,49 +48,23 @@ def parse_input(file_name: str) -> list[Point]:
         ]
 
 
-def rect_area(a: Point, b: Point) -> int:
-    return (abs(a.x - b.x) + 1) * (abs(a.y - b.y) + 1)
-
-
-def rect_bounds(a: Point, b: Point) -> tuple[Point, Point]:
-    """Convert pair of points to bounding box (min_corner, max_corner)."""
-    return Point(min(a.x, b.x), min(a.y, b.y)), Point(max(a.x, b.x), max(a.y, b.y))
-
-
-def polygon_edges_bounded(points: list[Point]) -> list[tuple[Point, Point]]:
-    """Extract edges from polygon (closed chain of consecutive points)."""
-    return [rect_bounds(a, b) for a, b in pairwise(points + [points[0]])]
-
-
-def rects_overlap(rect1: tuple[Point, Point], rect2: tuple[Point, Point]) -> bool:
-    """Check if two bounding rectangles overlap."""
-    min_r1, max_r1 = rect1
-    min_r2, max_r2 = rect2
-    return (
-        min_r2.x < max_r1.x
-        and min_r2.y < max_r1.y
-        and max_r2.x > min_r1.x
-        and max_r2.y > min_r1.y
-    )
-
-
 def day09_part1(points: list[Point]) -> int:
-    return max(rect_area(a, b) for a, b in combinations(points, 2))
+    return max(Rectangle(a, b).area for a, b in combinations(points, 2))
 
 
 def day09_part2(points: list[Point]) -> int:
-    """Find largest rectangle entirely contained within polygon."""
-    polygon_bounds = polygon_edges_bounded(points)
+    # we define edges as rectangles between consecutive points (with
+    # pairwise) and wrap around the list of points (with chain)
+    edges = [Rectangle(a, b) for a, b in pairwise(chain(points, points[:1]))]
 
-    def is_contained(rect: tuple[Point, Point]) -> bool:
-        """Check if rectangle doesn't overlap any polygon edge."""
-        return all(not rects_overlap(rect, edge) for edge in polygon_bounds)
+    def is_contained(rect: Rectangle) -> bool:
+        return all(not rect.overlaps(edge) for edge in edges)
 
     return max(
         (
-            rect_area(*rect)
-            for rect in (rect_bounds(a, b) for a, b in combinations(points, 2))
-            if is_contained(rect)
+            rect.area
+            for a, b in combinations(points, 2)
+            if is_contained(rect := Rectangle(a, b))
         ),
         default=0,
     )
