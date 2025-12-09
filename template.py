@@ -12,12 +12,12 @@ def parse_input(file_name: str) -> list[str]:
         return data_file.read().splitlines()
 
 
-def day00_part1(data: list[str]) -> int:
+def day00_part1(data: list[str]) -> None:
     print(data)
     pass
 
 
-def day00_part2(data: list[str]) -> int:
+def day00_part2(data: list[str]) -> None:
     pass
 
 

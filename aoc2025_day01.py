@@ -3,14 +3,14 @@ Advent of Code 2025
 Day 01: Secret Entrance
 """
 
-from functools import reduce
-
 import pytest
 
 
 def parse_input(file_name: str) -> list[int]:
+    dir_sign = {"L": -1, "R": 1}
+
     def convert_rotation(line: str) -> int:
-        direction = -1 if line[0] == "L" else 1
+        direction = dir_sign[line[0]]
         distance = int(line[1:])
         return direction * distance
 
@@ -19,18 +19,22 @@ def parse_input(file_name: str) -> list[int]:
 
 
 def day01_part1(data: list[int]) -> int:
-    def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
-        dial, count = state
-        new_dial = (dial + delta) % 100
-        return (new_dial, count + 1 if new_dial == 0 else count)
+    dial = 50
+    count = 0
 
-    _, pointed_zero = reduce(step, data, (50, 0))
-    return pointed_zero
+    for delta in data:
+        dial = (dial + delta) % 100
+        if dial == 0:
+            count += 1
+
+    return count
 
 
 def day01_part2(data: list[int]) -> int:
-    def step(state: tuple[int, int], delta: int) -> tuple[int, int]:
-        dial, count = state
+    dial = 50
+    count = 0
+
+    for delta in data:
         new_dial = (dial + delta) % 100
 
         if delta > 0:
@@ -40,10 +44,9 @@ def day01_part2(data: list[int]) -> int:
         else:
             count += ((100 - dial) % 100 + abs(delta)) // 100
 
-        return (new_dial, count)
+        dial = new_dial
 
-    _, pointed_zero = reduce(step, data, (50, 0))
-    return pointed_zero
+    return count
 
 
 @pytest.fixture(autouse=True, name="test_data")
