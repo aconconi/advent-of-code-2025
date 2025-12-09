@@ -5,10 +5,18 @@ requires-python = ">= 3.14"
 readme = "README.md"
 license = "UNLICENSE"
 dependencies = [
+  "pylint>=4.0.4",
   "pytest",
   "ruff>=0.14.7",
+  "shapely>=2.1.2",
   "ty>=0.0.1a32",
 ]
 
 [tool.ruff]
 lint.select = ["I"]
+
+[tool.pylint."messages control"]
+disable = [
+  "missing-docstring",
+  "invalid-name"
+]
