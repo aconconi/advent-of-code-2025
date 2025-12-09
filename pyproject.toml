@@ -19,3 +19,8 @@ disable = [
   "missing-docstring",
   "invalid-name"
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.0",
+]
