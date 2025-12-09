@@ -13,8 +13,8 @@ class IdRange:
         self.start = start
         self.end = end
 
-    def contains_id(self, id: int) -> bool:
-        return self.start <= id <= self.end
+    def contains_id(self, range_id: int) -> bool:
+        return self.start <= range_id <= self.end
 
     def overlaps_with(self, other: "IdRange") -> bool:
         """Check if this range overlaps with another range."""
