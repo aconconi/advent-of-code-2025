@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 
 import pytest
+from pulp import PULP_CBC_CMD, LpMinimize, LpProblem, LpVariable, lpSum  # type: ignore
 
 # Type aliases
 Matrix = list[list[int]]
@@ -48,18 +49,34 @@ class Machine:
 
         return cls(lights=lights, buttons=buttons, joltage=joltage)
 
+    def _build_coefficient_matrix(self, num_vars: int) -> Matrix:
+        """Build coefficient matrix where rows are variables, columns are buttons."""
+        return [
+            [1 if var_idx in button else 0 for _, button in enumerate(self.buttons)]
+            for var_idx in range(num_vars)
+        ]
+
     def solve_turn_on(self) -> int | None:
         """Solve the lights puzzle using boolean linear algebra over GF(2).
-
         Returns the minimum number of buttons to press, or None if no solution exists.
         """
-        # Build matrix a where a[i][j] = 1 if button j affects light i
-        a = [
-            [1 if i in button_indices else 0 for button_indices in self.buttons]
-            for i in range(len(self.lights))
-        ]
+        a = self._build_coefficient_matrix(len(self.lights))
         solution = solve_system_gf2_minweight(a, self.lights)
         return solution.count(1) if solution else None
+
+    def solve_joltage(self) -> int | None:
+        """Solve for button presses to achieve target joltage values (integer system).
+        Returns the sum of button presses with minimum weight, or None if no solution exists.
+        """
+        a = self._build_coefficient_matrix(len(self.joltage))
+        solution = solve_system_integer_minweight(a, self.joltage)
+        if not solution or not all(v >= 0 for v in solution):
+            return None
+        expected = [
+            sum(a[i][j] * solution[j] for j in range(len(solution)))
+            for i in range(len(a))
+        ]
+        return sum(solution) if expected == self.joltage else None
 
 
 def parse_input(file_name: str) -> list[Machine]:
@@ -106,46 +123,60 @@ def gauss_jordan_gf2(augmented: Matrix) -> PivotCols | None:
 
 
 def solve_system_gf2_minweight(a: Matrix, b: Vector) -> Vector | None:
-    """Solve Ax=b in GF(2), returning the minimum-weight solution, or None if no solution exists."""
-    m = len(a)  # number of rows (equations)
-    n = len(a[0])  # number of columns (variables)
-
-    # Augment matrix with b
+    """Solve Ax=b in GF(2), returning the minimum-weight solution."""
+    n = len(a[0])
     augmented: Matrix = [row + [item] for row, item in zip(a, b)]
     pivot_cols = gauss_jordan_gf2(augmented)
 
-    # No solution if system is inconsistent
     if pivot_cols is None:
         return None
 
-    # Free variables are those without a pivot
     free_cols = [i for i in range(n) if i not in pivot_cols]
+    pivot_set = set(pivot_cols)
 
-    # Try all combinations of free variables
-    min_solution: Vector | None = None
-    min_weight = float("inf")
-
-    for mask in range(1 << len(free_cols)):
-        # Set free variables according to mask
+    def solve_for_mask(mask: int) -> Vector:
         solution: Vector = [0] * n
         for i, col in enumerate(free_cols):
             solution[col] = (mask >> i) & 1
 
-        # Back-substitute for dependent variables
         for row_idx, col in enumerate(pivot_cols):
-            val = augmented[row_idx][-1]  # RHS
-            for j in range(col + 1, n):
-                if j not in pivot_cols:
-                    val ^= augmented[row_idx][j] & solution[j]
+            val = augmented[row_idx][-1]
+            val ^= sum(
+                augmented[row_idx][j] & solution[j]
+                for j in range(col + 1, n)
+                if j not in pivot_set
+            )
             solution[col] = val
 
-        # Count 1s
-        weight = sum(solution)
-        if weight < min_weight:
-            min_weight = weight
-            min_solution = solution
+        return solution
 
-    return min_solution
+    solutions = [solve_for_mask(mask) for mask in range(1 << len(free_cols))]
+    return min(solutions, key=sum) if solutions else None
+
+
+def solve_system_integer_minweight(a: Matrix, b: Vector) -> Vector | None:
+    """Solve Ax=b over integers using PuLP."""
+    m = len(a)
+    n = len(a[0])
+
+    prob = LpProblem("ButtonPresses", LpMinimize)
+    x = [LpVariable(f"x_{i}", lowBound=0, cat="Integer") for i in range(n)]
+
+    # Objective: minimize sum of button presses
+    prob += lpSum(x)
+
+    # Constraints: Ax = b
+    for i in range(m):
+        prob += lpSum(a[i][j] * x[j] for j in range(n)) == b[i]
+
+    # Solve
+    prob.solve(PULP_CBC_CMD(msg=0))
+
+    # Check if optimal solution found
+    if prob.status != 1:  # 1 = optimal
+        return None
+
+    return [int(var.varValue) for var in x if var.varValue is not None]
 
 
 def day10_part1(machines: list[Machine]) -> int:
@@ -157,10 +188,13 @@ def day10_part1(machines: list[Machine]) -> int:
 
 
 def day10_part2(machines: list[Machine]) -> int:
-    pass
+    return sum(
+        result
+        for result in (machine.solve_joltage() for machine in machines)
+        if result is not None
+    )
 
 
-"""
 @pytest.fixture(autouse=True, name="test_data")
 def fixture_test_data():
     return parse_input("data/day10_test.txt")
@@ -169,9 +203,10 @@ def fixture_test_data():
 def test_day10_part1(test_data):
     assert day10_part1(test_data) == 7
 
+
 def test_day10_part2(test_data):
-    assert day10_part2(test_data)
-"""
+    assert day10_part2(test_data) == 33
+
 
 if __name__ == "__main__":
     input_data = parse_input("data/day10.txt")

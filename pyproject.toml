@@ -5,10 +5,12 @@ requires-python = ">= 3.14"
 readme = "README.md"
 license = "UNLICENSE"
 dependencies = [
+  "pulp>=3.3.0",
   "pylint>=4.0.4",
   "pytest",
   "ruff>=0.14.7",
   "ty>=0.0.1a32",
+  "z3-solver>=4.15.4.0",
 ]
 
 [tool.ruff]
