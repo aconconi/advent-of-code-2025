@@ -3,7 +3,6 @@ Advent of Code 2025
 Day 10:
 """
 
-# pylint: skip-file
 import re
 from dataclasses import dataclass
 
@@ -21,57 +20,58 @@ class Machine:
     buttons: list[list[int]]
     joltage: list[int]
 
-    def solve(self) -> int:
-        """Solve the lights puzzle using boolean linear algebra over GF(2)."""
+    @classmethod
+    def from_line(cls, line: str) -> "Machine":
+        """Parse a machine from a data line."""
+        # Extract lights: [.##.]
+        lights_match = re.search(r"\[([\\.#]+)\]", line)
+        lights = (
+            [1 if c == "#" else 0 for c in lights_match.group(1)]
+            if lights_match
+            else []
+        )
+
+        # Extract buttons: (2,3,4,5,6,7,8) (0,1,2,3,7) ...
+        buttons_matches = re.findall(r"\(([0-9,]*)\)", line)
+        buttons = []
+        for match in buttons_matches:
+            if match:
+                buttons.append([int(x) for x in match.split(",")])
+            else:
+                buttons.append([])
+
+        # Extract joltage: {13,30,32,41,36,25,29,24,45}
+        joltage_match = re.search(r"\{([0-9,]+)\}", line)
+        joltage = (
+            [int(x) for x in joltage_match.group(1).split(",")] if joltage_match else []
+        )
+
+        return cls(lights=lights, buttons=buttons, joltage=joltage)
+
+    def solve_turn_on(self) -> int | None:
+        """Solve the lights puzzle using boolean linear algebra over GF(2).
+
+        Returns the minimum number of buttons to press, or None if no solution exists.
+        """
         # Build matrix a where a[i][j] = 1 if button j affects light i
         a = [
             [1 if i in button_indices else 0 for button_indices in self.buttons]
             for i in range(len(self.lights))
         ]
         solution = solve_system_gf2_minweight(a, self.lights)
-        return solution.count(1)
+        return solution.count(1) if solution else None
 
 
 def parse_input(file_name: str) -> list[Machine]:
-    machines = []
     with open(file_name, "r", encoding="ascii") as data_file:
-        for line in data_file:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Extract lights: [.##.]
-            lights_match = re.search(r"\[([\\.#]+)\]", line)
-            lights = (
-                [1 if c == "#" else 0 for c in lights_match.group(1)]
-                if lights_match
-                else []
-            )
-
-            # Extract buttons: (2,3,4,5,6,7,8) (0,1,2,3,7) ...
-            buttons_matches = re.findall(r"\(([0-9,]*)\)", line)
-            buttons = []
-            for match in buttons_matches:
-                if match:
-                    buttons.append([int(x) for x in match.split(",")])
-                else:
-                    buttons.append([])
-
-            # Extract joltage: {13,30,32,41,36,25,29,24,45}
-            joltage_match = re.search(r"\{([0-9,]+)\}", line)
-            joltage = (
-                [int(x) for x in joltage_match.group(1).split(",")]
-                if joltage_match
-                else []
-            )
-
-            machines.append(Machine(lights=lights, buttons=buttons, joltage=joltage))
-
-    return machines
+        return [Machine.from_line(line) for line in data_file]
 
 
-def gauss_jordan_gf2(augmented: Matrix) -> PivotCols:
-    """Gaussian elimination in GF(2) on augmented matrix. Returns pivot column indices."""
+def gauss_jordan_gf2(augmented: Matrix) -> PivotCols | None:
+    """Gaussian elimination in GF(2) on augmented matrix.
+
+    Returns pivot column indices, or None if the system is inconsistent.
+    """
     m = len(augmented)  # number of rows
     n = len(augmented[0])  # number of columns
     pivot_cols: PivotCols = []
@@ -97,17 +97,26 @@ def gauss_jordan_gf2(augmented: Matrix) -> PivotCols:
 
         current_row += 1
 
+    # Check for inconsistency: row with all zeros in coefficient part but 1 in augmented column
+    for row in augmented:
+        if all(row[j] == 0 for j in range(n - 1)) and row[-1] == 1:
+            return None
+
     return pivot_cols
 
 
-def solve_system_gf2_minweight(a: Matrix, b: Vector) -> Vector:
-    """Solve Ax=b in GF(2), returning the minimum-weight solution."""
+def solve_system_gf2_minweight(a: Matrix, b: Vector) -> Vector | None:
+    """Solve Ax=b in GF(2), returning the minimum-weight solution, or None if no solution exists."""
     m = len(a)  # number of rows (equations)
     n = len(a[0])  # number of columns (variables)
 
     # Augment matrix with b
     augmented: Matrix = [row + [item] for row, item in zip(a, b)]
     pivot_cols = gauss_jordan_gf2(augmented)
+
+    # No solution if system is inconsistent
+    if pivot_cols is None:
+        return None
 
     # Free variables are those without a pivot
     free_cols = [i for i in range(n) if i not in pivot_cols]
@@ -136,14 +145,18 @@ def solve_system_gf2_minweight(a: Matrix, b: Vector) -> Vector:
             min_weight = weight
             min_solution = solution
 
-    return min_solution  # type: ignore
+    return min_solution
 
 
 def day10_part1(machines: list[Machine]) -> int:
-    return sum(machine.solve() for machine in machines)
+    return sum(
+        result
+        for result in (machine.solve_turn_on() for machine in machines)
+        if result is not None
+    )
 
 
-def day10_part2(data: list[str]) -> None:
+def day10_part2(machines: list[Machine]) -> int:
     pass
 
 
