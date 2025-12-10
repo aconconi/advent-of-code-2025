@@ -50,7 +50,8 @@ class Machine:
         return cls(lights=lights, buttons=buttons, joltage=joltage)
 
     def _build_coefficient_matrix(self, num_vars: int) -> Matrix:
-        """Build coefficient matrix where rows are variables, columns are buttons."""
+        """Build coefficient matrix where rows are variables,
+        columns are buttons affecting the variables."""
         return [
             [1 if var_idx in button else 0 for _, button in enumerate(self.buttons)]
             for var_idx in range(num_vars)
@@ -70,13 +71,7 @@ class Machine:
         """
         a = self._build_coefficient_matrix(len(self.joltage))
         solution = solve_system_integer_minweight(a, self.joltage)
-        if not solution or not all(v >= 0 for v in solution):
-            return None
-        expected = [
-            sum(a[i][j] * solution[j] for j in range(len(solution)))
-            for i in range(len(a))
-        ]
-        return sum(solution) if expected == self.joltage else None
+        return sum(solution) if solution else None
 
 
 def parse_input(file_name: str) -> list[Machine]:
@@ -86,7 +81,6 @@ def parse_input(file_name: str) -> list[Machine]:
 
 def gauss_jordan_gf2(augmented: Matrix) -> PivotCols | None:
     """Gaussian elimination in GF(2) on augmented matrix.
-
     Returns pivot column indices, or None if the system is inconsistent.
     """
     m = len(augmented)  # number of rows
@@ -162,21 +156,23 @@ def solve_system_integer_minweight(a: Matrix, b: Vector) -> Vector | None:
     prob = LpProblem("ButtonPresses", LpMinimize)
     x = [LpVariable(f"x_{i}", lowBound=0, cat="Integer") for i in range(n)]
 
-    # Objective: minimize sum of button presses
     prob += lpSum(x)
-
-    # Constraints: Ax = b
     for i in range(m):
         prob += lpSum(a[i][j] * x[j] for j in range(n)) == b[i]
 
-    # Solve
     prob.solve(PULP_CBC_CMD(msg=0))
 
-    # Check if optimal solution found
-    if prob.status != 1:  # 1 = optimal
+    if prob.status != 1:
         return None
 
-    return [int(var.varValue) for var in x if var.varValue is not None]
+    solution = [int(var.varValue) for var in x if var.varValue is not None]
+
+    assert all(v >= 0 for v in solution), "Solution has negative values"
+    assert [
+        sum(a[i][j] * solution[j] for j in range(len(solution))) for i in range(len(a))
+    ] == b, "Solution doesn't match target"
+
+    return solution
 
 
 def day10_part1(machines: list[Machine]) -> int:
