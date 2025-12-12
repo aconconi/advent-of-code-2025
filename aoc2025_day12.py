@@ -31,6 +31,7 @@ def parse_input(file_name: str) -> list[Region]:
 
 
 def day12_part1(regions: list[Region]) -> int:
+    # Surprisingly, the puzzle input is not as hard as the example.
     return sum(region.size >= 9 * sum(region.shape_counters) for region in regions)
 
 
