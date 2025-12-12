@@ -1,6 +1,6 @@
 """
 Advent of Code 2025
-Day 10:
+Day 10: Factory
 """
 
 import re

@@ -1,6 +1,6 @@
 """
 Advent of Code 2025
-Day 04:
+Day 04: Printing Department
 """
 
 from itertools import product

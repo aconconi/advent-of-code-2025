@@ -1,6 +1,6 @@
 """
 Advent of Code 2025
-Day 06:
+Day 06: Trash Compactor
 """
 
 # pylint: skip-file
